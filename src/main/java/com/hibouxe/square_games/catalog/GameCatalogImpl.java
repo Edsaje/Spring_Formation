@@ -1,4 +1,4 @@
-package com.hibouxe.square_games;
+package com.hibouxe.square_games.catalog;
 
 import fr.le_campus_numerique.square_games.engine.GameFactory;
 import fr.le_campus_numerique.square_games.engine.tictactoe.TicTacToeGameFactory;

@@ -1,4 +1,4 @@
-package com.hibouxe.square_games;
+package com.hibouxe.square_games.heartbeat;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;

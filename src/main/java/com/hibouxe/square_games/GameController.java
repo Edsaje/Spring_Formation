@@ -1,5 +1,6 @@
 package com.hibouxe.square_games;
 
+import com.hibouxe.square_games.service.GameService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

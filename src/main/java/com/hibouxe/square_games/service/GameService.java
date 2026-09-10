@@ -1,4 +1,6 @@
-package com.hibouxe.square_games;
+package com.hibouxe.square_games.service;
+
+import com.hibouxe.square_games.GameCreationParams;
 
 import java.util.Map;
 

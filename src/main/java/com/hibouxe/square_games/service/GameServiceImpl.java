@@ -1,5 +1,6 @@
-package com.hibouxe.square_games;
+package com.hibouxe.square_games.service;
 
+import com.hibouxe.square_games.GameCreationParams;
 import org.springframework.stereotype.Service;
 
 import java.util.*;

@@ -1,4 +1,4 @@
-package com.hibouxe.square_games;
+package com.hibouxe.square_games.catalog;
 
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
