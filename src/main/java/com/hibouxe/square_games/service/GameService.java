@@ -1,12 +1,13 @@
 package com.hibouxe.square_games.service;
 
 import com.hibouxe.square_games.GameCreationParams;
+import fr.le_campus_numerique.square_games.engine.Game;
 
-import java.util.Map;
+import java.util.UUID;
 
 public interface GameService {
 
-    String createNewGame(GameCreationParams params);
+    Game createNewGame(GameCreationParams params);
 
-    Map<String, Object> getGame(String gameId);
+    Game getGame(UUID gameId);
 }

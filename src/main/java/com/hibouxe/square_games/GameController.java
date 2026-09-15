@@ -1,18 +1,19 @@
 package com.hibouxe.square_games;
 
 import com.hibouxe.square_games.service.GameService;
+import fr.le_campus_numerique.square_games.engine.Game;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 public class GameController {
 
-    // Déclaration de la dépendance vers l'interface
     private final GameService gameService;
 
-    // INJECTION PAR CONSTRUCTEUR (Recommandé par Spring)
     public GameController(GameService gameService) {
         this.gameService = gameService;
     }
@@ -20,28 +21,32 @@ public class GameController {
     @PostMapping("/games")
     public ResponseEntity<?> createGame(@RequestBody GameCreationParams params) {
         try {
-            // Demande au service de créer la partie
-            String gameId = gameService.createNewGame(params);
-
+            Game game = gameService.createNewGame(params);
             return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
-                    "gameId", gameId,
-                    "message", "Partie de " + params.gameType + " créée avec succès !"
+                    "gameId", game.getId().toString(),
+                    "message", "Partie de " + params.gameType() + " créée avec succès !"
             ));
         } catch (IllegalArgumentException e) {
-            // Si le type de jeu n'est ni 'tictactoe' ni 'chess', on intercepte l'erreur du service
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
 
     @GetMapping("/games/{gameId}")
-    public ResponseEntity<Map<String, Object>> getGameState(@PathVariable String gameId) {
-        Map<String, Object> state = gameService.getGame(gameId);
+    public ResponseEntity<?> getGameState(@PathVariable String gameId) {
+        try {
+            UUID uuid = UUID.fromString(gameId);
+            Game game = gameService.getGame(uuid);
 
-        // Si la map contient une clé 'error', on renvoie un statut 404
-        if (state.containsKey("error")) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(state);
+            if (game == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("error", "Aucune partie trouvée avec l'identifiant " + gameId));
+            }
+
+            return ResponseEntity.ok(game);
+        } catch (IllegalArgumentException e) {
+            // Dans le cas où l'identifiant n'est pas un format UUID valide
+            return ResponseEntity.badRequest()
+                    .body(Map.of("error", "Format d'identifiant UUID invalide : " + gameId));
         }
-
-        return ResponseEntity.ok(state);
     }
 }

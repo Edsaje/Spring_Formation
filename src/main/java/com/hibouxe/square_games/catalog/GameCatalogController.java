@@ -4,6 +4,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Collection;
+import java.util.Locale;
 
 @RestController
 public class GameCatalogController {
@@ -15,7 +16,8 @@ public class GameCatalogController {
     }
 
     @GetMapping("/games")
-    public Collection<String> getGames() {
-        return gameCatalog.getGameIdentifiers();
+    public Collection<String> getGames(Locale locale) {
+        // Spring injecte automatiquement la Locale résolue depuis Accept-Language !
+        return gameCatalog.getGameNames(locale);
     }
 }
