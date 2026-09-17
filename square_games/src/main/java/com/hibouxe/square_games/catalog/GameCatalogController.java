@@ -1,5 +1,9 @@
 package com.hibouxe.square_games.catalog;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -7,6 +11,7 @@ import java.util.Collection;
 import java.util.Locale;
 
 @RestController
+@Tag(name = "Catalogue de Jeux", description = "Consultation des jeux disponibles sur la plateforme")
 public class GameCatalogController {
 
     private final GameCatalog gameCatalog;
@@ -16,7 +21,13 @@ public class GameCatalogController {
     }
 
     @GetMapping("/games")
-    public Collection<String> getGames(Locale locale) {
+    @Operation(
+            summary = "Lister les types de jeux disponibles",
+            description = "Retourne les noms des jeux de plateau pris en charge par l'application (ex: TicTacToe, Taquin, Puissance 4), traduits selon l'entête Accept-Language."
+    )
+    @ApiResponse(responseCode = "200", description = "Liste des noms de jeux disponibles")
+    public Collection<String> getGames(
+            @Parameter(hidden = true) Locale locale) {
         // Spring injecte automatiquement la Locale résolue depuis Accept-Language !
         return gameCatalog.getGameNames(locale);
     }
