@@ -13,6 +13,7 @@ Cette itération marque le passage d'une application monolithique à une archite
 4. [Sécurité & Règles Métier : 401 vs 403](#4-sécurité--règles-métier--401-vs-403)
 5. [Tests d'API Automatisés avec Bruno](#5-tests-dapi-automatisés-avec-bruno)
 6. [Guide d'Exécution Pas-à-Pas](#6-guide-dexécution-pas-à-pas)
+7. [Documentation Interactive Swagger UI](#7-documentation-interactive-swagger-ui)
 
 ---
 
@@ -219,3 +220,20 @@ cd /home/user/Spring_Formation/square_games
    - Contrôle d'accès inter-services,
    - Respect strict des tours de jeu,
    - Nettoyage final des données.
+
+---
+
+## 7. Documentation Interactive Swagger UI
+
+Grâce à l'intégration de `springdoc-openapi-starter-webmvc-ui`, chaque microservice génère automatiquement sa propre documentation interactive Swagger UI et sa spécification OpenAPI standard.
+
+Dès que les services sont lancés, vous pouvez explorer, visualiser et tester directement les endpoints dans votre navigateur :
+
+### 🎮 Square Games (Moteur de Jeu)
+- **Interface Swagger UI** : [http://localhost:8080/swagger-ui/index.html](http://localhost:8080/swagger-ui/index.html)
+- **Spécification OpenAPI (JSON)** : [http://localhost:8080/v3/api-docs](http://localhost:8080/v3/api-docs)
+
+### 👤 User Service (Gestion des Utilisateurs)
+- **Interface Swagger UI** : [http://localhost:8081/swagger-ui/index.html](http://localhost:8081/swagger-ui/index.html)
+- **Spécification OpenAPI (JSON)** : [http://localhost:8081/v3/api-docs](http://localhost:8081/v3/api-docs)
+
