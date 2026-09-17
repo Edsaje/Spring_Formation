@@ -8,12 +8,14 @@ import fr.le_campus_numerique.square_games.engine.taquin.TaquinGameFactory;
 import fr.le_campus_numerique.square_games.engine.tictactoe.TicTacToeGameFactory;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Stream;
 
 @Repository
 @Profile("jpa")
+@Transactional
 public class JpaGameDao implements GameDao {
 
     private final GameEntityRepository repository;

@@ -17,7 +17,7 @@ public class GameEntity {
 
     // cascade = CascadeType.ALL : sauvegarder la partie sauvegarde automatiquement ses jetons
     // orphanRemoval = true : supprimer un jeton de la liste le supprime de la base
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @JoinColumn(name = "game_id")
     public List<GameTokenEntity> tokens = new ArrayList<>();
 
