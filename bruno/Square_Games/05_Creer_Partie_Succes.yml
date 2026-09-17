@@ -1,0 +1,48 @@
+info:
+  name: 5 - Créer Partie - Succès (Alice contre Bob)
+  type: http
+  seq: 5
+
+http:
+  method: POST
+  url: "{{gameServiceUrl}}/games"
+  headers:
+    - name: X-UserId
+      value: "{{userId}}"
+  body:
+    type: json
+    data: |-
+      {
+        "gameType": "tictactoe",
+        "numberOfPlayers": 2,
+        "boardSize": 3,
+        "opponentIds": ["{{bobId}}"]
+      }
+  auth: inherit
+
+runtime:
+  scripts:
+    - type: after-response
+      code: |-
+        bru.setVar("gameId", res.body.gameId);
+        bru.setVar("currentPlayerId", res.body.currentPlayerId);
+        const wrongPlayer = (res.body.currentPlayerId === bru.getVar("userId")) ? bru.getVar("bobId") : bru.getVar("userId");
+        bru.setVar("wrongPlayerId", wrongPlayer);
+    - type: tests
+      code: |-
+        test("Partie créée avec succès (201 Created)", function() {
+          expect(res.getStatus()).to.equal(201);
+          expect(res.body.gameId).to.be.a('string');
+          expect(res.body.currentPlayerId).to.be.a('string');
+        });
+  assertions:
+    - expression: res.status
+      operator: eq
+      value: "201"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

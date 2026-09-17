@@ -1,0 +1,28 @@
+info:
+  name: 13 - Nettoyage - Supprimer Bob
+  type: http
+  seq: 13
+
+http:
+  method: DELETE
+  url: "{{userServiceUrl}}/users/{{bobId}}"
+  auth: inherit
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Utilisateur Bob supprimé avec succès (204 No Content)", function() {
+          expect(res.getStatus()).to.equal(204);
+        });
+  assertions:
+    - expression: res.status
+      operator: eq
+      value: "204"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

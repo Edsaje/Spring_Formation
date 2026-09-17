@@ -1,0 +1,29 @@
+info:
+  name: 7 - Consulter État de la Partie
+  type: http
+  seq: 7
+
+http:
+  method: GET
+  url: "{{gameServiceUrl}}/games/{{gameId}}"
+  auth: inherit
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("État de la partie récupéré avec succès (200 OK)", function() {
+          expect(res.getStatus()).to.equal(200);
+          expect(res.body.id).to.equal(bru.getVar("gameId"));
+        });
+  assertions:
+    - expression: res.status
+      operator: eq
+      value: "200"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

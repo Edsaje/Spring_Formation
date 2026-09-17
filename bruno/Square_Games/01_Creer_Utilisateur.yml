@@ -1,0 +1,43 @@
+info:
+  name: 1 - Créer Utilisateur (Alice)
+  type: http
+  seq: 1
+
+http:
+  method: POST
+  url: "{{userServiceUrl}}/users"
+  body:
+    type: json
+    data: |-
+      {
+        "username": "Alice",
+        "email": "{{aliceEmail}}"
+      }
+  auth: inherit
+
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        bru.setVar("aliceEmail", "alice_" + Date.now() + "@example.com");
+    - type: after-response
+      code: |-
+        bru.setVar("userId", res.body.id);
+    - type: tests
+      code: |-
+        test("Utilisateur créé avec succès (201)", function() {
+          expect(res.getStatus()).to.equal(201);
+          expect(res.body.id).to.be.a('string');
+          expect(res.body.username).to.equal("Alice");
+        });
+  assertions:
+    - expression: res.status
+      operator: eq
+      value: "201"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

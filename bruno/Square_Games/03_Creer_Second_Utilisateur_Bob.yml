@@ -1,0 +1,43 @@
+info:
+  name: 3 - Créer Utilisateur 2 (Bob)
+  type: http
+  seq: 3
+
+http:
+  method: POST
+  url: "{{userServiceUrl}}/users"
+  body:
+    type: json
+    data: |-
+      {
+        "username": "Bob",
+        "email": "{{bobEmail}}"
+      }
+  auth: inherit
+
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        bru.setVar("bobEmail", "bob_" + Date.now() + "@example.com");
+    - type: after-response
+      code: |-
+        bru.setVar("bobId", res.body.id);
+    - type: tests
+      code: |-
+        test("Utilisateur Bob créé avec succès (201)", function() {
+          expect(res.getStatus()).to.equal(201);
+          expect(res.body.id).to.be.a('string');
+          expect(res.body.username).to.equal("Bob");
+        });
+  assertions:
+    - expression: res.status
+      operator: eq
+      value: "201"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
