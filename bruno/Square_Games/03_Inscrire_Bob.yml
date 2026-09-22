@@ -1,5 +1,5 @@
 info:
-  name: 3 - Créer Utilisateur 2 (Bob)
+  name: 3 - Inscrire Utilisateur (Bob - ROLE_USER)
   type: http
   seq: 3
 
@@ -10,8 +10,10 @@ http:
     type: json
     data: |-
       {
-        "username": "Bob",
-        "email": "{{bobEmail}}"
+        "username": "{{bobUsername}}",
+        "email": "{{bobEmail}}",
+        "password": "password123",
+        "role": "ROLE_USER"
       }
   auth: inherit
 
@@ -19,16 +21,19 @@ runtime:
   scripts:
     - type: before-request
       code: |-
-        bru.setVar("bobEmail", "bob_" + Date.now() + "@example.com");
+        const ts = Date.now();
+        bru.setVar("bobUsername", "bob_" + ts);
+        bru.setVar("bobEmail", "bob_" + ts + "@example.com");
     - type: after-response
       code: |-
         bru.setVar("bobId", res.body.id);
     - type: tests
       code: |-
-        test("Utilisateur Bob créé avec succès (201)", function() {
+        test("Bob inscrit avec succès (201 Created)", function() {
           expect(res.getStatus()).to.equal(201);
           expect(res.body.id).to.be.a('string');
-          expect(res.body.username).to.equal("Bob");
+          expect(res.body.username).to.equal(bru.getVar("bobUsername"));
+          expect(res.body.role).to.equal("ROLE_USER");
         });
   assertions:
     - expression: res.status

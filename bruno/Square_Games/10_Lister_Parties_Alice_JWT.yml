@@ -1,20 +1,24 @@
 info:
-  name: 7 - Consulter État de la Partie
+  name: 10 - Lister les Parties d'Alice (via JWT)
   type: http
-  seq: 7
+  seq: 10
 
 http:
   method: GET
-  url: "{{gameServiceUrl}}/games/{{gameId}}"
+  url: "{{gameServiceUrl}}/games"
+  headers:
+    - name: Authorization
+      value: "Bearer {{aliceToken}}"
   auth: inherit
 
 runtime:
   scripts:
     - type: tests
       code: |-
-        test("État de la partie récupéré avec succès (200 OK)", function() {
+        test("Parties d'Alice récupérées avec succès (200 OK)", function() {
           expect(res.getStatus()).to.equal(200);
-          expect(res.body.id).to.equal(bru.getVar("gameId"));
+          expect(res.body).to.be.an('array');
+          expect(res.body.length).to.be.above(0);
         });
   assertions:
     - expression: res.status

@@ -1,21 +1,19 @@
 info:
-  name: 4 - Créer Partie - Rejet 401 (Utilisateur Inconnu)
+  name: 8 - Créer Partie - Rejeté (Sans Jeton JWT - 401)
   type: http
-  seq: 4
+  seq: 8
 
 http:
   method: POST
   url: "{{gameServiceUrl}}/games"
-  headers:
-    - name: X-UserId
-      value: "00000000-0000-0000-0000-000000000000"
   body:
     type: json
     data: |-
       {
         "gameType": "tictactoe",
         "numberOfPlayers": 2,
-        "boardSize": 3
+        "boardSize": 3,
+        "opponentIds": ["{{bobId}}"]
       }
   auth: inherit
 
@@ -23,9 +21,8 @@ runtime:
   scripts:
     - type: tests
       code: |-
-        test("Rejet avec statut 401 Unauthorized car l'utilisateur n'existe pas dans user-service", function() {
+        test("Accès refusé sans authentification (401 Unauthorized)", function() {
           expect(res.getStatus()).to.equal(401);
-          expect(res.body.error).to.be.a('string');
         });
   assertions:
     - expression: res.status

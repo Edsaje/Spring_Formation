@@ -1,20 +1,17 @@
 info:
-  name: 8 - Jouer un Coup - Rejet 403 (Pas son tour)
+  name: 7 - Connexion Échec (Mot de passe incorrect - 401)
   type: http
-  seq: 8
+  seq: 7
 
 http:
   method: POST
-  url: "{{gameServiceUrl}}/games/{{gameId}}/moves"
-  headers:
-    - name: X-UserId
-      value: "{{wrongPlayerId}}"
+  url: "{{userServiceUrl}}/auth/login"
   body:
     type: json
     data: |-
       {
-        "x": 0,
-        "y": 0
+        "username": "{{aliceUsername}}",
+        "password": "mauvais_mot_de_passe"
       }
   auth: inherit
 
@@ -22,14 +19,14 @@ runtime:
   scripts:
     - type: tests
       code: |-
-        test("Rejet avec statut 403 Forbidden car ce n'est pas le tour de ce joueur", function() {
-          expect(res.getStatus()).to.equal(403);
+        test("Connexion rejetée avec 401 Unauthorized", function() {
+          expect(res.getStatus()).to.equal(401);
           expect(res.body.error).to.be.a('string');
         });
   assertions:
     - expression: res.status
       operator: eq
-      value: "403"
+      value: "401"
 
 settings:
   encodeUrl: true

@@ -1,8 +1,10 @@
 package com.hibouxe.square_games;
 
 import com.hibouxe.square_games.client.UserValidationClient;
+import com.hibouxe.square_games.config.JwtAuthenticationFilter;
 import com.hibouxe.square_games.exception.NotPlayerTurnException;
 import com.hibouxe.square_games.service.GameService;
+import com.hibouxe.square_games.service.JwtService;
 import fr.le_campus_numerique.square_games.engine.CellPosition;
 import fr.le_campus_numerique.square_games.engine.Game;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,12 +36,35 @@ class SquareGamesApplicationTests {
     @Autowired
     private GameService gameService;
 
+    @Autowired
+    private JwtService jwtService;
+
+    @Autowired
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
+
     @MockitoBean
     private UserValidationClient userValidationClient;
 
     @BeforeEach
     void setUp() {
-        this.mockMvc = MockMvcBuilders.standaloneSetup(gameController).build();
+        org.springframework.security.core.context.SecurityContextHolder.clearContext();
+        jakarta.servlet.Filter resetFilter = new org.springframework.web.filter.OncePerRequestFilter() {
+            @Override
+            protected void doFilterInternal(jakarta.servlet.http.HttpServletRequest request,
+                                            jakarta.servlet.http.HttpServletResponse response,
+                                            jakarta.servlet.FilterChain filterChain)
+                    throws jakarta.servlet.ServletException, java.io.IOException {
+                try {
+                    filterChain.doFilter(request, response);
+                } finally {
+                    org.springframework.security.core.context.SecurityContextHolder.clearContext();
+                }
+            }
+        };
+
+        this.mockMvc = MockMvcBuilders.standaloneSetup(gameController)
+                .addFilters(resetFilter, jwtAuthenticationFilter)
+                .build();
     }
 
     @Test
@@ -81,13 +106,9 @@ class SquareGamesApplicationTests {
     }
 
     @Test
-    @DisplayName("Sanction HTTP 401 : Rejet lors de la création si X-UserId inconnu")
-    void testHttpSanction401_CreateGame_UnknownUser() throws Exception {
-        UUID unknownUserId = UUID.randomUUID();
-        Mockito.when(userValidationClient.isUserValid(unknownUserId)).thenReturn(false);
-
+    @DisplayName("Sanction HTTP 401 : Rejet lors de la création sans authentification")
+    void testHttpSanction401_CreateGame_NoAuth() throws Exception {
         mockMvc.perform(post("/games")
-                        .header("X-UserId", unknownUserId.toString())
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -101,13 +122,13 @@ class SquareGamesApplicationTests {
     }
 
     @Test
-    @DisplayName("Sanction HTTP 201 : Création réussie si X-UserId valide et authentifié")
-    void testHttpSanction201_CreateGame_AuthenticatedUser() throws Exception {
+    @DisplayName("Sanction HTTP 201 : Création réussie avec JWT Bearer Token (sans appel réseau)")
+    void testHttpSanction201_CreateGame_AuthenticatedWithJwt() throws Exception {
         UUID validUserId = UUID.randomUUID();
-        Mockito.when(userValidationClient.isUserValid(validUserId)).thenReturn(true);
+        String token = jwtService.generateToken("Alice", validUserId, List.of("ROLE_USER"));
 
         mockMvc.perform(post("/games")
-                        .header("X-UserId", validUserId.toString())
+                        .header("Authorization", "Bearer " + token)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -122,59 +143,45 @@ class SquareGamesApplicationTests {
     }
 
     @Test
-    @DisplayName("Protection des données (HTTP 200) : Seules les parties de l'utilisateur X-UserId sont renvoyées")
-    void testHttpSanction200_DataProtection_GetUserGames() throws Exception {
+    @DisplayName("Protection des données (HTTP 200) : Seules les parties du joueur authentifié par JWT sont renvoyées")
+    void testHttpSanction200_DataProtection_GetUserGames_WithJwt() throws Exception {
         UUID aliceId = UUID.randomUUID();
         UUID bobId = UUID.randomUUID();
-        Mockito.when(userValidationClient.isUserValid(aliceId)).thenReturn(true);
-        Mockito.when(userValidationClient.isUserValid(bobId)).thenReturn(true);
+        String aliceToken = jwtService.generateToken("Alice", aliceId, List.of("ROLE_USER"));
+        String bobToken = jwtService.generateToken("Bob", bobId, List.of("ROLE_USER"));
 
-        // Alice crée une partie solo contre un joueur virtuel
+        // Alice crée une partie
         GameCreationParams params = new GameCreationParams("tictactoe", 2, 3);
         Game aliceGame = gameService.createNewGame(aliceId, params);
 
-        // Requête d'Alice avec son X-UserId -> 200 OK et sa partie est présente
+        // Requête d'Alice avec son JWT -> 200 OK et sa partie est présente
         mockMvc.perform(get("/games")
-                        .header("X-UserId", aliceId.toString()))
+                        .header("Authorization", "Bearer " + aliceToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[?(@.id == '" + aliceGame.getId() + "')]").exists());
 
-        // Requête de Bob avec son X-UserId -> 200 OK mais la partie d'Alice N'EST PAS présente (protection des données)
+        // Requête de Bob avec son JWT -> 200 OK mais la partie d'Alice N'EST PAS présente
         mockMvc.perform(get("/games")
-                        .header("X-UserId", bobId.toString()))
+                        .header("Authorization", "Bearer " + bobToken))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[?(@.id == '" + aliceGame.getId() + "')]").doesNotExist());
     }
 
     @Test
-    @DisplayName("Sanction HTTP 401 : Rejet lors de la consultation des parties si X-UserId inconnu")
-    void testHttpSanction401_GetUserGames_UnknownUser() throws Exception {
-        UUID unknownUserId = UUID.randomUUID();
-        Mockito.when(userValidationClient.isUserValid(unknownUserId)).thenReturn(false);
-
-        mockMvc.perform(get("/games")
-                        .header("X-UserId", unknownUserId.toString()))
-                .andExpect(status().isUnauthorized())
-                .andExpect(jsonPath("$.error").exists());
-    }
-
-    @Test
-    @DisplayName("Sanction HTTP 403 : Rejet lorsque le joueur X-UserId tente de jouer hors de son tour")
-    void testHttpSanction403_PlayMove_WrongTurn() throws Exception {
+    @DisplayName("Sanction HTTP 403 : Rejet lorsque le joueur authentifié par JWT tente de jouer hors de son tour")
+    void testHttpSanction403_PlayMove_WrongTurn_WithJwt() throws Exception {
         UUID creatorId = UUID.randomUUID();
         UUID opponentId = UUID.randomUUID();
-        Mockito.when(userValidationClient.isUserValid(creatorId)).thenReturn(true);
-        Mockito.when(userValidationClient.isUserValid(opponentId)).thenReturn(true);
 
         GameCreationParams params = new GameCreationParams("tictactoe", 2, 3, List.of(opponentId));
         Game game = gameService.createNewGame(creatorId, params);
 
         UUID currentPlayer = game.getCurrentPlayerId();
-        // Identifier le joueur qui n'a PAS la main
         UUID waitingPlayer = currentPlayer.equals(creatorId) ? opponentId : creatorId;
+        String waitingPlayerToken = jwtService.generateToken("WaitingPlayer", waitingPlayer, List.of("ROLE_USER"));
 
         mockMvc.perform(post("/games/" + game.getId() + "/moves")
-                        .header("X-UserId", waitingPlayer.toString())
+                        .header("Authorization", "Bearer " + waitingPlayerToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -187,20 +194,19 @@ class SquareGamesApplicationTests {
     }
 
     @Test
-    @DisplayName("Sanction HTTP 200 : Coup validé avec succès lorsque X-UserId est le joueur actif")
-    void testHttpSanction200_PlayMove_CurrentPlayerSuccess() throws Exception {
+    @DisplayName("Sanction HTTP 200 : Coup validé avec succès lorsque le joueur actif utilise son JWT")
+    void testHttpSanction200_PlayMove_CurrentPlayerSuccess_WithJwt() throws Exception {
         UUID creatorId = UUID.randomUUID();
         UUID opponentId = UUID.randomUUID();
-        Mockito.when(userValidationClient.isUserValid(creatorId)).thenReturn(true);
-        Mockito.when(userValidationClient.isUserValid(opponentId)).thenReturn(true);
 
         GameCreationParams params = new GameCreationParams("tictactoe", 2, 3, List.of(opponentId));
         Game game = gameService.createNewGame(creatorId, params);
 
         UUID currentPlayer = game.getCurrentPlayerId();
+        String currentPlayerToken = jwtService.generateToken("CurrentPlayer", currentPlayer, List.of("ROLE_USER"));
 
         mockMvc.perform(post("/games/" + game.getId() + "/moves")
-                        .header("X-UserId", currentPlayer.toString())
+                        .header("Authorization", "Bearer " + currentPlayerToken)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -210,6 +216,26 @@ class SquareGamesApplicationTests {
                                 """))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(game.getId().toString()));
+    }
+
+    @Test
+    @DisplayName("Compatibilité ascendante : Support de l'entête X-UserId avec validation RestClient")
+    void testBackwardCompatibility_WithXUserIdHeader() throws Exception {
+        UUID validUserId = UUID.randomUUID();
+        Mockito.when(userValidationClient.isUserValid(validUserId)).thenReturn(true);
+
+        mockMvc.perform(post("/games")
+                        .header("X-UserId", validUserId.toString())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "gameType": "tictactoe",
+                                  "numberOfPlayers": 2,
+                                  "boardSize": 3
+                                }
+                                """))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.gameId").isString());
     }
 
     @Test

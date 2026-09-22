@@ -1,14 +1,14 @@
 info:
-  name: 5 - Créer Partie - Succès (Alice contre Bob)
+  name: 9 - Créer Partie - Succès avec JWT (Alice contre Bob)
   type: http
-  seq: 5
+  seq: 9
 
 http:
   method: POST
   url: "{{gameServiceUrl}}/games"
   headers:
-    - name: X-UserId
-      value: "{{userId}}"
+    - name: Authorization
+      value: "Bearer {{aliceToken}}"
   body:
     type: json
     data: |-
@@ -26,11 +26,16 @@ runtime:
       code: |-
         bru.setVar("gameId", res.body.gameId);
         bru.setVar("currentPlayerId", res.body.currentPlayerId);
-        const wrongPlayer = (res.body.currentPlayerId === bru.getVar("userId")) ? bru.getVar("bobId") : bru.getVar("userId");
-        bru.setVar("wrongPlayerId", wrongPlayer);
+        if (res.body.currentPlayerId === bru.getVar("aliceId")) {
+          bru.setVar("currentPlayerToken", bru.getVar("aliceToken"));
+          bru.setVar("wrongPlayerToken", bru.getVar("bobToken"));
+        } else {
+          bru.setVar("currentPlayerToken", bru.getVar("bobToken"));
+          bru.setVar("wrongPlayerToken", bru.getVar("aliceToken"));
+        }
     - type: tests
       code: |-
-        test("Partie créée avec succès (201 Created)", function() {
+        test("Partie créée avec succès via JWT (201 Created)", function() {
           expect(res.getStatus()).to.equal(201);
           expect(res.body.gameId).to.be.a('string');
           expect(res.body.currentPlayerId).to.be.a('string');

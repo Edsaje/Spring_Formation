@@ -1,0 +1,31 @@
+info:
+  name: 15 - RBAC - Lister Utilisateurs Rejeté pour Alice (ROLE_USER - 403)
+  type: http
+  seq: 15
+
+http:
+  method: GET
+  url: "{{userServiceUrl}}/users"
+  headers:
+    - name: Authorization
+      value: "Bearer {{aliceToken}}"
+  auth: inherit
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Accès refusé pour simple utilisateur (403 Forbidden)", function() {
+          expect(res.getStatus()).to.equal(403);
+        });
+  assertions:
+    - expression: res.status
+      operator: eq
+      value: "403"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

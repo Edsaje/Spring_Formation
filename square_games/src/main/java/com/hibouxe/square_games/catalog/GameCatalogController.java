@@ -20,15 +20,24 @@ public class GameCatalogController {
         this.gameCatalog = gameCatalog;
     }
 
-    @GetMapping("/games")
+    @GetMapping(value = "/games", headers = "!Authorization")
     @Operation(
-            summary = "Lister les types de jeux disponibles",
-            description = "Retourne les noms des jeux de plateau pris en charge par l'application (ex: TicTacToe, Taquin, Puissance 4), traduits selon l'entête Accept-Language."
+            summary = "Lister les types de jeux disponibles (Public)",
+            description = "Retourne les noms des jeux de plateau pris en charge par l'application, traduits selon l'entête Accept-Language."
     )
     @ApiResponse(responseCode = "200", description = "Liste des noms de jeux disponibles")
     public Collection<String> getGames(
             @Parameter(hidden = true) Locale locale) {
-        // Spring injecte automatiquement la Locale résolue depuis Accept-Language !
+        return gameCatalog.getGameNames(locale);
+    }
+
+    @GetMapping("/games/catalog")
+    @Operation(
+            summary = "Consulter le catalogue des jeux",
+            description = "Route explicite de consultation du catalogue."
+    )
+    public Collection<String> getCatalog(
+            @Parameter(hidden = true) Locale locale) {
         return gameCatalog.getGameNames(locale);
     }
 }

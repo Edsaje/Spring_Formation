@@ -1,26 +1,24 @@
 info:
-  name: 6 - Lister les Parties de l'Utilisateur (Alice)
+  name: 16 - RBAC - Lister Utilisateurs Autorisé pour Admin (ROLE_ADMIN - 200)
   type: http
-  seq: 6
+  seq: 16
 
 http:
   method: GET
-  url: "{{gameServiceUrl}}/games"
+  url: "{{userServiceUrl}}/users"
   headers:
-    - name: X-UserId
-      value: "{{userId}}"
+    - name: Authorization
+      value: "Bearer {{adminToken}}"
   auth: inherit
 
 runtime:
   scripts:
     - type: tests
       code: |-
-        test("Liste des parties récupérée avec succès (200 OK)", function() {
+        test("Liste des utilisateurs accessible pour Admin (200 OK)", function() {
           expect(res.getStatus()).to.equal(200);
           expect(res.body).to.be.an('array');
-          expect(res.body.length).to.be.greaterThan(0);
-          const found = res.body.some(g => g.id === bru.getVar("gameId"));
-          expect(found).to.be.true;
+          expect(res.body.length).to.be.above(0);
         });
   assertions:
     - expression: res.status

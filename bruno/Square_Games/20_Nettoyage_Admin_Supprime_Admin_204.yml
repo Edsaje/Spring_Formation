@@ -1,18 +1,21 @@
 info:
-  name: 13 - Nettoyage - Supprimer Bob
+  name: 20 - Nettoyage - Supprimer Admin par Admin (ROLE_ADMIN - 204)
   type: http
-  seq: 13
+  seq: 20
 
 http:
   method: DELETE
-  url: "{{userServiceUrl}}/users/{{bobId}}"
+  url: "{{userServiceUrl}}/users/{{adminId}}"
+  headers:
+    - name: Authorization
+      value: "Bearer {{adminToken}}"
   auth: inherit
 
 runtime:
   scripts:
     - type: tests
       code: |-
-        test("Utilisateur Bob supprimé avec succès (204 No Content)", function() {
+        test("Admin supprimé avec succès par Admin (204 No Content)", function() {
           expect(res.getStatus()).to.equal(204);
         });
   assertions:

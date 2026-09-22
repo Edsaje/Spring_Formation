@@ -1,14 +1,14 @@
 info:
-  name: 9 - Jouer un Coup - Succès (Joueur Actif)
+  name: 14 - Jouer un Coup - Succès (Joueur Actif avec JWT)
   type: http
-  seq: 9
+  seq: 14
 
 http:
   method: POST
   url: "{{gameServiceUrl}}/games/{{gameId}}/moves"
   headers:
-    - name: X-UserId
-      value: "{{currentPlayerId}}"
+    - name: Authorization
+      value: "Bearer {{currentPlayerToken}}"
   body:
     type: json
     data: |-
@@ -22,10 +22,9 @@ runtime:
   scripts:
     - type: tests
       code: |-
-        test("Coup joué avec succès (200 OK)", function() {
+        test("Coup joué avec succès via JWT (200 OK)", function() {
           expect(res.getStatus()).to.equal(200);
           expect(res.body.id).to.equal(bru.getVar("gameId"));
-          // Le joueur courant doit avoir changé
           expect(res.body.currentPlayerId).to.not.equal(bru.getVar("currentPlayerId"));
         });
   assertions:

@@ -1,18 +1,21 @@
 info:
-  name: 11 - Supprimer Utilisateur (Alice)
+  name: 18 - RBAC - Supprimer Alice Autorisé pour Admin (ROLE_ADMIN - 204)
   type: http
-  seq: 11
+  seq: 18
 
 http:
   method: DELETE
-  url: "{{userServiceUrl}}/users/{{userId}}"
+  url: "{{userServiceUrl}}/users/{{aliceId}}"
+  headers:
+    - name: Authorization
+      value: "Bearer {{adminToken}}"
   auth: inherit
 
 runtime:
   scripts:
     - type: tests
       code: |-
-        test("Utilisateur supprimé avec succès (204 No Content)", function() {
+        test("Alice supprimée avec succès par Admin (204 No Content)", function() {
           expect(res.getStatus()).to.equal(204);
         });
   assertions:

@@ -13,6 +13,12 @@ public record UserResponseDto(
         String username,
 
         @Schema(description = "Adresse email de l'utilisateur", example = "alice@example.com")
-        String email
+        String email,
+
+        @Schema(description = "Rôle de l'utilisateur", example = "ROLE_USER")
+        String role
 ) {
+    public UserResponseDto(UUID id, String username, String email) {
+        this(id, username, email, "ROLE_USER");
+    }
 }

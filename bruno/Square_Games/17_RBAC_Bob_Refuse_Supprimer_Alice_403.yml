@@ -1,0 +1,31 @@
+info:
+  name: 17 - RBAC - Supprimer Alice Rejeté pour Bob (ROLE_USER - 403)
+  type: http
+  seq: 17
+
+http:
+  method: DELETE
+  url: "{{userServiceUrl}}/users/{{aliceId}}"
+  headers:
+    - name: Authorization
+      value: "Bearer {{bobToken}}"
+  auth: inherit
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Suppression refusée pour un utilisateur standard (403 Forbidden)", function() {
+          expect(res.getStatus()).to.equal(403);
+        });
+  assertions:
+    - expression: res.status
+      operator: eq
+      value: "403"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

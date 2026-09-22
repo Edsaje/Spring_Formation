@@ -1,0 +1,42 @@
+info:
+  name: 4 - Connexion Bob & Obtention JWT
+  type: http
+  seq: 4
+
+http:
+  method: POST
+  url: "{{userServiceUrl}}/auth/login"
+  body:
+    type: json
+    data: |-
+      {
+        "username": "{{bobUsername}}",
+        "password": "password123"
+      }
+  auth: inherit
+
+runtime:
+  scripts:
+    - type: after-response
+      code: |-
+        bru.setVar("bobToken", res.body.token);
+    - type: tests
+      code: |-
+        test("Bob connecté avec succès et JWT délivré (200 OK)", function() {
+          expect(res.getStatus()).to.equal(200);
+          expect(res.body.token).to.be.a('string');
+          expect(res.body.token.length).to.be.above(20);
+          expect(res.body.username).to.equal(bru.getVar("bobUsername"));
+          expect(res.body.role).to.equal("ROLE_USER");
+        });
+  assertions:
+    - expression: res.status
+      operator: eq
+      value: "200"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

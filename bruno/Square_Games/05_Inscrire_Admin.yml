@@ -1,0 +1,48 @@
+info:
+  name: 5 - Inscrire Utilisateur (Admin - ROLE_ADMIN)
+  type: http
+  seq: 5
+
+http:
+  method: POST
+  url: "{{userServiceUrl}}/users"
+  body:
+    type: json
+    data: |-
+      {
+        "username": "{{adminUsername}}",
+        "email": "{{adminEmail}}",
+        "password": "admin123",
+        "role": "ROLE_ADMIN"
+      }
+  auth: inherit
+
+runtime:
+  scripts:
+    - type: before-request
+      code: |-
+        const ts = Date.now();
+        bru.setVar("adminUsername", "admin_" + ts);
+        bru.setVar("adminEmail", "admin_" + ts + "@example.com");
+    - type: after-response
+      code: |-
+        bru.setVar("adminId", res.body.id);
+    - type: tests
+      code: |-
+        test("Admin inscrit avec succès (201 Created)", function() {
+          expect(res.getStatus()).to.equal(201);
+          expect(res.body.id).to.be.a('string');
+          expect(res.body.username).to.equal(bru.getVar("adminUsername"));
+          expect(res.body.role).to.equal("ROLE_ADMIN");
+        });
+  assertions:
+    - expression: res.status
+      operator: eq
+      value: "201"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false

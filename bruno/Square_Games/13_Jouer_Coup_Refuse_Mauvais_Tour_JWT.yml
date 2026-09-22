@@ -1,0 +1,39 @@
+info:
+  name: 13 - Jouer un Coup - Rejeté (Ce n'est pas le tour de ce joueur - 403)
+  type: http
+  seq: 13
+
+http:
+  method: POST
+  url: "{{gameServiceUrl}}/games/{{gameId}}/moves"
+  headers:
+    - name: Authorization
+      value: "Bearer {{wrongPlayerToken}}"
+  body:
+    type: json
+    data: |-
+      {
+        "x": 1,
+        "y": 1
+      }
+  auth: inherit
+
+runtime:
+  scripts:
+    - type: tests
+      code: |-
+        test("Coup rejeté pour joueur non actif (403 Forbidden)", function() {
+          expect(res.getStatus()).to.equal(403);
+          expect(res.body.error).to.be.a('string');
+        });
+  assertions:
+    - expression: res.status
+      operator: eq
+      value: "403"
+
+settings:
+  encodeUrl: true
+  timeout: 0
+  followRedirects: true
+  maxRedirects: 5
+  forwardAuthorizationHeader: false
