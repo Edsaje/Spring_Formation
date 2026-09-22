@@ -10,7 +10,7 @@ http:
     type: json
     data: |-
       {
-        "username": "{{bobUsername}}",
+        "username": "bob",
         "password": "password123"
       }
   auth: inherit
@@ -20,13 +20,14 @@ runtime:
     - type: after-response
       code: |-
         bru.setVar("bobToken", res.body.token);
+        bru.setVar("bobId", res.body.userId);
     - type: tests
       code: |-
         test("Bob connecté avec succès et JWT délivré (200 OK)", function() {
           expect(res.getStatus()).to.equal(200);
           expect(res.body.token).to.be.a('string');
           expect(res.body.token.length).to.be.above(20);
-          expect(res.body.username).to.equal(bru.getVar("bobUsername"));
+          expect(res.body.username).to.equal("bob");
           expect(res.body.role).to.equal("ROLE_USER");
         });
   assertions:
